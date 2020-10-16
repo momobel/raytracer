@@ -17,8 +17,8 @@ fn fill_image(img: &mut image::Image) {
     for line in 0..img.height {
         for col in 0..img.width {
             let px = &mut img.data[line * img.height + col];
-            px.red = (line as f32 / img.height as f32 * 255.) as u8;
-            px.blue = (col as f32 / img.width as f32 * 255.) as u8;
+            px.red = line as f64 / img.height as f64;
+            px.blue = col as f64 / img.width as f64;
         }
     }
 }

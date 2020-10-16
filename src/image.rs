@@ -1,15 +1,15 @@
-pub struct Pixel {
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
+pub struct Color {
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64,
 }
 
-impl std::default::Default for Pixel {
+impl std::default::Default for Color {
     fn default() -> Self {
-        Pixel {
-            red: 0,
-            green: 0,
-            blue: 0,
+        Color {
+            red: 0.0,
+            green: 0.0,
+            blue: 0.0,
         }
     }
 }
@@ -17,15 +17,15 @@ impl std::default::Default for Pixel {
 pub struct Image {
     pub width: usize,
     pub height: usize,
-    pub data: Vec<Pixel>,
+    pub data: Vec<Color>,
 }
 
 impl Image {
     pub fn new(width: usize, height: usize) -> Self {
         let sz: usize = width * height;
-        let mut data: Vec<Pixel> = Vec::with_capacity(sz);
+        let mut data: Vec<Color> = Vec::with_capacity(sz);
         for _ in 0..sz {
-            data.push(Pixel::default());
+            data.push(Color::default());
         }
         Image {
             width,
