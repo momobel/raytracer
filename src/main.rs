@@ -2,6 +2,7 @@ use std::fs;
 use structopt::StructOpt;
 mod image;
 mod ppm;
+mod vec;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "ray")]
