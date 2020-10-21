@@ -30,5 +30,5 @@ fn main() {
     let file =
         fs::File::create(&opt.output).expect(format!("Failed to open {}", opt.output).as_str());
     let mut writer: ppm::PPMWriter<fs::File> = ppm::PPMWriter::new(file);
-    let res = writer.write(&img).expect("Failed to write image");
+    writer.write(&img).expect("Failed to write image");
 }
