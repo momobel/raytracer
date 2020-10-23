@@ -7,29 +7,64 @@ mod vec;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "ray")]
 struct Options {
-    #[structopt(short, long, default_value = "255")]
+    #[structopt(short, long, default_value = "400")]
     width: u16,
-    #[structopt(short, long, default_value = "255")]
-    height: u16,
     output: String,
 }
 
-fn fill_image(img: &mut image::Image) {
-    for line in 0..img.height {
-        for col in 0..img.width {
-            let px = &mut img.data[line * img.height + col];
-            px.red = line as f64 / img.height as f64;
-            px.blue = col as f64 / img.width as f64;
-        }
-    }
-}
-
 fn main() {
+    let aspect_ratio = 16.0 / 9.0;
     let opt = Options::from_args();
-    let mut img = image::Image::new(opt.width as usize, opt.height as usize);
-    fill_image(&mut img);
+    // image
+    let mut img = image::Image::new(
+        opt.width as usize,
+        (opt.width as f64 / aspect_ratio) as usize,
+    );
+    // camera
+    let viewport_height = 2.0;
+    let viewport = Viewport::new(aspect_ratio * viewport_height, viewport_height);
+    let focal_length = 1.0;
+    let origin = vec::Point::new(0.0, 0.0, 0.0);
+    // render
+    fill_image(&mut img, &origin, &viewport, focal_length);
     let file =
         fs::File::create(&opt.output).expect(format!("Failed to open {}", opt.output).as_str());
     let mut writer: ppm::PPMWriter<fs::File> = ppm::PPMWriter::new(file);
     writer.write(&img).expect("Failed to write image");
+}
+
+#[derive(Debug)]
+struct Viewport {
+    pub width: f64,
+    pub height: f64,
+}
+
+impl Viewport {
+    pub fn new(width: f64, height: f64) -> Self {
+        Self { width, height }
+    }
+}
+
+fn ray_color(ray: &vec::Ray) -> image::Color {
+    let unit_dir = vec::unit(&ray.direction);
+    let t = 0.5 * (unit_dir.y + 1.0);
+    (1.0 - t) * image::Color::new(1.0, 1.0, 1.0) + t * image::Color::new(0.5, 0.7, 1.0)
+}
+
+fn fill_image(img: &mut image::Image, origin: &vec::Point, view: &Viewport, focal_length: f64) {
+    let horizontal = vec::Vector::new(view.width, 0.0, 0.0);
+    let vertical = vec::Vector::new(0.0, view.height, 0.0);
+    let lower_left_corner =
+        origin - horizontal / 2.0 - vertical / 2.0 - vec::Vector::new(0.0, 0.0, focal_length);
+
+    for line in 0..img.height {
+        for col in 0..img.width {
+            let px = &mut img.data[line * img.width + col];
+            let u = col as f64 / (img.width - 1) as f64;
+            let v = (img.height - line) as f64 / (img.height - 1) as f64;
+            let dir = lower_left_corner + u * &horizontal + v * &vertical - origin;
+            let ray = vec::Ray::new(origin, &dir);
+            *px = ray_color(&ray);
+        }
+    }
 }

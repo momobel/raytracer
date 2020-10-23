@@ -21,7 +21,7 @@ impl<W: io::Write> PPMWriter<W> {
         self.writer.write_all(b"255\n")?;
         for l in 0..img.height {
             for c in 0..img.width {
-                let px = &img.data[l * img.height + c];
+                let px = &img.data[l * img.width + c];
                 self.writer.write_all(
                     format!(
                         "{} {} {} ",

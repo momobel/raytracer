@@ -34,15 +34,39 @@ impl Add for Vector {
     }
 }
 
-impl Sub for Vector {
-    type Output = Self;
+impl Sub<&Vector> for &Vector {
+    type Output = Vector;
 
-    fn sub(self, other: Self) -> Self {
+    fn sub(self, other: &Vector) -> Vector {
         Vector {
             x: self.x - other.x,
             y: self.y - other.y,
             z: self.z - other.z,
         }
+    }
+}
+
+impl Sub<&Vector> for Vector {
+    type Output = Vector;
+
+    fn sub(self, other: &Vector) -> Vector {
+        &self - other
+    }
+}
+
+impl Sub<Vector> for &Vector {
+    type Output = Vector;
+
+    fn sub(self, other: Vector) -> Vector {
+        self - &other
+    }
+}
+
+impl Sub for Vector {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        &self - &other
     }
 }
 
@@ -58,11 +82,11 @@ impl Mul<f64> for &Vector {
     }
 }
 
-impl Div<f64> for &Vector {
+impl Mul<f64> for Vector {
     type Output = Vector;
 
-    fn div(self, rhs: f64) -> Vector {
-        self * (1.0 / rhs)
+    fn mul(self, rhs: f64) -> Vector {
+        &self * rhs
     }
 }
 
@@ -71,6 +95,22 @@ impl Mul<&Vector> for f64 {
 
     fn mul(self, rhs: &Vector) -> Vector {
         rhs * self
+    }
+}
+
+impl Div<f64> for &Vector {
+    type Output = Vector;
+
+    fn div(self, rhs: f64) -> Vector {
+        self * (1.0 / rhs)
+    }
+}
+
+impl Div<f64> for Vector {
+    type Output = Vector;
+
+    fn div(self, rhs: f64) -> Vector {
+        &self / rhs
     }
 }
 
@@ -88,6 +128,27 @@ pub fn cross(a: &Vector, b: &Vector) -> Vector {
 
 pub fn unit(v: &Vector) -> Vector {
     v / v.length()
+}
+
+pub type Point = Vector;
+
+#[derive(Debug)]
+pub struct Ray {
+    pub origin: Point,
+    pub direction: Vector,
+}
+
+impl Ray {
+    pub fn new(origin: &Point, direction: &Vector) -> Ray {
+        Ray {
+            origin: *origin,
+            direction: *direction,
+        }
+    }
+
+    pub fn at(&self, t: f64) -> Point {
+        self.origin + t * &self.direction
+    }
 }
 
 #[cfg(test)]
