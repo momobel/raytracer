@@ -45,7 +45,49 @@ impl Viewport {
     }
 }
 
+#[derive(Debug)]
+struct Sphere {
+    pub center: vec::Point,
+    pub radius: f64,
+}
+
+fn hit_sphere(ray: &vec::Ray, sphere: &Sphere) -> bool {
+    // let S be a sphere of center C and radius r
+    // a point P is on the sphere if ||P - C||² = r²
+    // a vector V has ||V||² = V.V
+    // a ray R with origin O and direction D hits the sphere
+    // if for any t ||O + tD - C||² = r²
+    //               (O + tD - C).(O + tD - C) = r²
+    // which means t²||D||² + 2tD.(O - C) + ||O - C||² - r² = 0
+    // This is a quadratic equation with
+    // a = ||D||²
+    // b = 2D.(O-C)
+    // c = ||O - C||² - r²
+    // discriminant d is b² - 4ac
+    // if negative, no real solution exist so no intersection
+    // if 0, a single solution exists -b / 2a
+    // if positive, 2 solutions exist (-b +- sqrt(d)) / 2a
+    let c_to_o = sphere.center - ray.origin;
+    let a = ray.direction.length_squared();
+    let b = 2.0 * vec::dot(&ray.direction, &c_to_o);
+    let c = c_to_o.length_squared() - sphere.radius * sphere.radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant >= 0.0
+}
+
+const SCENE_SPHERE: Sphere = Sphere {
+    center: vec::Point {
+        x: 0.0,
+        y: 0.0,
+        z: -1.0,
+    },
+    radius: 0.5,
+};
+
 fn ray_color(ray: &vec::Ray) -> image::Color {
+    if hit_sphere(ray, &SCENE_SPHERE) {
+        return image::Color::new(1.0, 0.0, 0.0);
+    }
     let unit_dir = vec::unit(&ray.direction);
     let t = 0.5 * (unit_dir.y + 1.0);
     (1.0 - t) * image::Color::new(1.0, 1.0, 1.0) + t * image::Color::new(0.5, 0.7, 1.0)
