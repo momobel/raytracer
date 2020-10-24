@@ -49,7 +49,10 @@ impl Hittable for Sphere {
             }
             let intersect = ray.at(t);
             let normal = intersect - self.center;
-            Some(HitRecord::new(intersect, vec::unit(&normal), t))
+            // ray direction and normal point the same way if dot product is positive
+            let normal_ray_dot = vec::dot(&normal, &ray.direction);
+            let front = if normal_ray_dot < 0.0 { true } else { false };
+            Some(HitRecord::new(intersect, vec::unit(&normal), t, front))
         }
     }
 }

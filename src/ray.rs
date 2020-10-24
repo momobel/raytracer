@@ -24,11 +24,18 @@ pub struct HitRecord {
     pub point: Point,
     pub normal: Vector,
     pub t: f64,
+    pub front_face: bool,
 }
 
 impl HitRecord {
-    pub fn new(point: Point, normal: Vector, t: f64) -> Self {
-        Self { point, normal, t }
+    pub fn new(point: Point, normal: Vector, t: f64, front_face: bool) -> Self {
+        let normal = if front_face { normal } else { -normal };
+        Self {
+            point,
+            normal,
+            t,
+            front_face,
+        }
     }
 }
 
