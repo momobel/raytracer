@@ -69,13 +69,17 @@ fn hit_sphere(ray: &vec::Ray, sphere: &Sphere) -> Option<f64> {
     // if positive, 2 solutions exist (-b +- sqrt(d)) / 2a
     let c_to_o = ray.origin - sphere.center;
     let a = ray.direction.length_squared();
-    let b = 2.0 * vec::dot(&ray.direction, &c_to_o);
+    // b has a factor 2 so let b = 2h
+    // the quadratic equation is t = (-b +- sqrt(b² - 4ac)) / 2a
+    // replacing b gives (-2h +- sqrt((2h)² - 4ac)) / 2a
+    // then              (-h +- sqrt(h² - ac)) / a
+    let half_b = vec::dot(&ray.direction, &c_to_o);
     let c = c_to_o.length_squared() - sphere.radius * sphere.radius;
-    let discriminant = b * b - 4.0 * a * c;
+    let discriminant = half_b * half_b - a * c;
     if discriminant < 0.0 {
         None
     } else {
-        Some((-b - discriminant.sqrt()) / (2.0 * a))
+        Some((-half_b - discriminant.sqrt()) / a)
     }
 }
 
