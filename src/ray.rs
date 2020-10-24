@@ -18,3 +18,20 @@ impl Ray {
         self.origin + t * &self.direction
     }
 }
+
+#[derive(Debug)]
+pub struct HitRecord {
+    pub point: Point,
+    pub normal: Vector,
+    pub t: f64,
+}
+
+impl HitRecord {
+    pub fn new(point: Point, normal: Vector, t: f64) -> Self {
+        Self { point, normal, t }
+    }
+}
+
+pub trait Hittable {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+}

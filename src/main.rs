@@ -5,6 +5,7 @@ mod ppm;
 mod ray;
 mod sphere;
 mod vec;
+use ray::Hittable;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "ray")]
@@ -57,11 +58,8 @@ const SCENE_SPHERE: sphere::Sphere = sphere::Sphere {
 };
 
 fn ray_color(ray: &ray::Ray) -> image::Color {
-    if let Some(t) = sphere::hit_sphere(ray, &SCENE_SPHERE) {
-        let intersection = ray.at(t);
-        let normal = intersection - SCENE_SPHERE.center;
-        let normal = vec::unit(&normal);
-        return 0.5 * image::Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
+    if let Some(hit) = SCENE_SPHERE.hit(ray, 0.0, 50.0) {
+        return 0.5 * image::Color::new(hit.normal.x + 1.0, hit.normal.y + 1.0, hit.normal.z + 1.0);
     }
     let unit_dir = vec::unit(&ray.direction);
     let t = 0.5 * (unit_dir.y + 1.0);
