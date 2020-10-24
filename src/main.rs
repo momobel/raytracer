@@ -2,6 +2,7 @@ use std::fs;
 use structopt::StructOpt;
 mod image;
 mod ppm;
+mod ray;
 mod vec;
 
 #[derive(StructOpt, Debug)]
@@ -51,7 +52,7 @@ struct Sphere {
     pub radius: f64,
 }
 
-fn hit_sphere(ray: &vec::Ray, sphere: &Sphere) -> Option<f64> {
+fn hit_sphere(ray: &ray::Ray, sphere: &Sphere) -> Option<f64> {
     // let S be a sphere of center C and radius r
     // a point P is on the sphere if ||P - C||² = r²
     // a vector V has ||V||² = V.V
@@ -93,7 +94,7 @@ const SCENE_SPHERE: Sphere = Sphere {
     radius: 0.5,
 };
 
-fn ray_color(ray: &vec::Ray) -> image::Color {
+fn ray_color(ray: &ray::Ray) -> image::Color {
     if let Some(t) = hit_sphere(ray, &SCENE_SPHERE) {
         let intersection = ray.at(t);
         let normal = intersection - SCENE_SPHERE.center;
@@ -117,7 +118,7 @@ fn fill_image(img: &mut image::Image, origin: &vec::Point, view: &Viewport, foca
             let u = col as f64 / (img.width - 1) as f64;
             let v = (img.height - line) as f64 / (img.height - 1) as f64;
             let dir = lower_left_corner + u * &horizontal + v * &vertical - origin;
-            let ray = vec::Ray::new(origin, &dir);
+            let ray = ray::Ray::new(origin, &dir);
             *px = ray_color(&ray);
         }
     }
