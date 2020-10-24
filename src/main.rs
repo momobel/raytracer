@@ -58,7 +58,7 @@ const SCENE_SPHERE: sphere::Sphere = sphere::Sphere {
 };
 
 fn ray_color(ray: &ray::Ray) -> image::Color {
-    if let Some(hit) = SCENE_SPHERE.hit(ray, 0.0, 50.0) {
+    if let Some(hit) = SCENE_SPHERE.hit_by(ray, 0.0, 50.0) {
         return 0.5 * image::Color::new(hit.normal.x + 1.0, hit.normal.y + 1.0, hit.normal.z + 1.0);
     }
     let unit_dir = vec::unit(&ray.direction);
