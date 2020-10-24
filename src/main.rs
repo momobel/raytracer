@@ -79,6 +79,7 @@ fn hit_sphere(ray: &vec::Ray, sphere: &Sphere) -> Option<f64> {
     if discriminant < 0.0 {
         None
     } else {
+        // return closest hit point since we know the sphere is ahead of the camera
         Some((-half_b - discriminant.sqrt()) / a)
     }
 }
