@@ -51,7 +51,7 @@ struct Sphere {
     pub radius: f64,
 }
 
-fn hit_sphere(ray: &vec::Ray, sphere: &Sphere) -> bool {
+fn hit_sphere(ray: &vec::Ray, sphere: &Sphere) -> Option<f64> {
     // let S be a sphere of center C and radius r
     // a point P is on the sphere if ||P - C||² = r²
     // a vector V has ||V||² = V.V
@@ -72,7 +72,11 @@ fn hit_sphere(ray: &vec::Ray, sphere: &Sphere) -> bool {
     let b = 2.0 * vec::dot(&ray.direction, &c_to_o);
     let c = c_to_o.length_squared() - sphere.radius * sphere.radius;
     let discriminant = b * b - 4.0 * a * c;
-    discriminant >= 0.0
+    if discriminant < 0.0 {
+        None
+    } else {
+        Some((-b - discriminant.sqrt()) / (2.0 * a))
+    }
 }
 
 const SCENE_SPHERE: Sphere = Sphere {
@@ -85,8 +89,11 @@ const SCENE_SPHERE: Sphere = Sphere {
 };
 
 fn ray_color(ray: &vec::Ray) -> image::Color {
-    if hit_sphere(ray, &SCENE_SPHERE) {
-        return image::Color::new(1.0, 0.0, 0.0);
+    if let Some(t) = hit_sphere(ray, &SCENE_SPHERE) {
+        let intersection = ray.at(t);
+        let normal = intersection - SCENE_SPHERE.center;
+        let normal = vec::unit(&normal);
+        return 0.5 * image::Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
     }
     let unit_dir = vec::unit(&ray.direction);
     let t = 0.5 * (unit_dir.y + 1.0);
