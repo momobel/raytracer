@@ -67,7 +67,7 @@ fn hit_sphere(ray: &vec::Ray, sphere: &Sphere) -> Option<f64> {
     // if negative, no real solution exist so no intersection
     // if 0, a single solution exists -b / 2a
     // if positive, 2 solutions exist (-b +- sqrt(d)) / 2a
-    let c_to_o = sphere.center - ray.origin;
+    let c_to_o = ray.origin - sphere.center;
     let a = ray.direction.length_squared();
     let b = 2.0 * vec::dot(&ray.direction, &c_to_o);
     let c = c_to_o.length_squared() - sphere.radius * sphere.radius;
