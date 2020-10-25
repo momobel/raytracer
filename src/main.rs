@@ -70,6 +70,32 @@ impl Camera {
 struct RenderSettings {
     pub antialiasing_samples: u16,
     pub ray_bounce_limit: u16,
+    pub gamma: f64,
+}
+
+impl std::default::Default for RenderSettings {
+    fn default() -> Self {
+        RenderSettings {
+            antialiasing_samples: 1,
+            ray_bounce_limit: 0,
+            gamma: 1.0,
+        }
+    }
+}
+
+impl RenderSettings {
+    pub fn aa_samples(&mut self, val: u16) -> &mut Self {
+        self.antialiasing_samples = val;
+        self
+    }
+    pub fn ray_bounce_limit(&mut self, val: u16) -> &mut Self {
+        self.ray_bounce_limit = val;
+        self
+    }
+    pub fn gamma(&mut self, val: u16) -> &mut Self {
+        self.gamma = 1.0 / val as f64;
+        self
+    }
 }
 
 fn main() {
@@ -92,10 +118,8 @@ fn main() {
         Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0),
     ]);
     // render
-    let settings = RenderSettings {
-        antialiasing_samples: 100,
-        ray_bounce_limit: 50,
-    };
+    let mut settings = RenderSettings::default();
+    settings.aa_samples(100).ray_bounce_limit(50).gamma(2);
     fill_image(&mut img, &settings, &camera, &world);
     let file =
         fs::File::create(&opt.output).expect(format!("Failed to open {}", opt.output).as_str());
@@ -161,7 +185,12 @@ fn fill_image(
                 let ray = camera.ray(u, v);
                 color = color + ray_color(&ray, world, settings.ray_bounce_limit as i16);
             }
+            // gamma correction
+            // gamma G means raising the color to the power 1/G
             color = &color / samples as f64;
+            color.red = color.red.powf(settings.gamma);
+            color.green = color.green.powf(settings.gamma);
+            color.blue = color.blue.powf(settings.gamma);
             color.clamp(0.0, 0.999);
             *px = color;
         }
