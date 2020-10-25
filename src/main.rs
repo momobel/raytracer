@@ -35,15 +35,32 @@ struct Camera {
     pub position: Point,
     pub viewport: Viewport,
     pub focal: f64,
+    lower_left_corner: Point,
+    horizontal: Vector,
+    vertical: Vector,
 }
 
 impl Camera {
     pub fn new(position: Point, viewport: Viewport, focal: f64) -> Self {
+        let horizontal = Vector::new(viewport.width, 0.0, 0.0);
+        let vertical = Vector::new(0.0, viewport.height, 0.0);
+        let lower_left_corner =
+            position - horizontal / 2.0 - vertical / 2.0 + Vector::new(0.0, 0.0, -focal);
         Self {
             position,
             viewport,
             focal,
+            lower_left_corner,
+            horizontal,
+            vertical,
         }
+    }
+
+    pub fn ray(&self, u: f64, v: f64) -> Ray {
+        Ray::new(
+            self.position,
+            self.lower_left_corner + u * &self.horizontal + v * &self.vertical - self.position,
+        )
     }
 }
 
@@ -84,18 +101,12 @@ fn ray_color(ray: &Ray, world: &HittableVec<Sphere>) -> Color {
 }
 
 fn fill_image(img: &mut image::Image, camera: &Camera, world: &HittableVec<Sphere>) {
-    let horizontal = Vector::new(camera.viewport.width, 0.0, 0.0);
-    let vertical = Vector::new(0.0, camera.viewport.height, 0.0);
-    let lower_left_corner =
-        camera.position - horizontal / 2.0 - vertical / 2.0 - Vector::new(0.0, 0.0, camera.focal);
-
     for line in 0..img.height {
         for col in 0..img.width {
             let px = &mut img.data[line * img.width + col];
             let u = col as f64 / (img.width - 1) as f64;
             let v = (img.height - line) as f64 / (img.height - 1) as f64;
-            let dir = lower_left_corner + u * &horizontal + v * &vertical - camera.position;
-            let ray = Ray::new(&camera.position, &dir);
+            let ray = camera.ray(u, v);
             *px = ray_color(&ray, world);
         }
     }

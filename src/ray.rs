@@ -7,11 +7,8 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn new(origin: &Point, direction: &Vector) -> Ray {
-        Ray {
-            origin: *origin,
-            direction: *direction,
-        }
+    pub fn new(origin: Point, direction: Vector) -> Ray {
+        Ray { origin, direction }
     }
 
     pub fn at(&self, t: f64) -> Point {
