@@ -5,7 +5,10 @@ mod ppm;
 mod ray;
 mod sphere;
 mod vec;
-use ray::Hittable;
+use image::Color;
+use ray::{Hittable, Ray};
+use sphere::Sphere;
+use vec::{Point, Vector};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "ray")]
@@ -29,13 +32,13 @@ impl Viewport {
 
 #[derive(Debug)]
 struct Camera {
-    pub position: vec::Point,
+    pub position: Point,
     pub viewport: Viewport,
     pub focal: f64,
 }
 
 impl Camera {
-    pub fn new(position: vec::Point, viewport: Viewport, focal: f64) -> Self {
+    pub fn new(position: Point, viewport: Viewport, focal: f64) -> Self {
         Self {
             position,
             viewport,
@@ -56,7 +59,7 @@ fn main() {
     let viewport_height = 2.0;
     let viewport = Viewport::new(aspect_ratio * viewport_height, viewport_height);
     let focal_length = 1.0;
-    let origin = vec::Point::new(0.0, 0.0, 0.0);
+    let origin = Point::new(0.0, 0.0, 0.0);
     let camera = Camera::new(origin, viewport, focal_length);
     // render
     fill_image(&mut img, &camera);
@@ -66,8 +69,8 @@ fn main() {
     writer.write(&img).expect("Failed to write image");
 }
 
-const SCENE_SPHERE: sphere::Sphere = sphere::Sphere {
-    center: vec::Point {
+const SCENE_SPHERE: Sphere = Sphere {
+    center: Point {
         x: 0.0,
         y: 0.0,
         z: -1.0,
@@ -75,22 +78,20 @@ const SCENE_SPHERE: sphere::Sphere = sphere::Sphere {
     radius: 0.5,
 };
 
-fn ray_color(ray: &ray::Ray) -> image::Color {
+fn ray_color(ray: &Ray) -> Color {
     if let Some(hit) = SCENE_SPHERE.hit_by(ray, 0.0, 50.0) {
-        return 0.5 * image::Color::new(hit.normal.x + 1.0, hit.normal.y + 1.0, hit.normal.z + 1.0);
+        return 0.5 * Color::new(hit.normal.x + 1.0, hit.normal.y + 1.0, hit.normal.z + 1.0);
     }
     let unit_dir = vec::unit(&ray.direction);
     let t = 0.5 * (unit_dir.y + 1.0);
-    (1.0 - t) * image::Color::new(1.0, 1.0, 1.0) + t * image::Color::new(0.5, 0.7, 1.0)
+    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
 fn fill_image(img: &mut image::Image, camera: &Camera) {
-    let horizontal = vec::Vector::new(camera.viewport.width, 0.0, 0.0);
-    let vertical = vec::Vector::new(0.0, camera.viewport.height, 0.0);
-    let lower_left_corner = camera.position
-        - horizontal / 2.0
-        - vertical / 2.0
-        - vec::Vector::new(0.0, 0.0, camera.focal);
+    let horizontal = Vector::new(camera.viewport.width, 0.0, 0.0);
+    let vertical = Vector::new(0.0, camera.viewport.height, 0.0);
+    let lower_left_corner =
+        camera.position - horizontal / 2.0 - vertical / 2.0 - Vector::new(0.0, 0.0, camera.focal);
 
     for line in 0..img.height {
         for col in 0..img.width {
@@ -98,7 +99,7 @@ fn fill_image(img: &mut image::Image, camera: &Camera) {
             let u = col as f64 / (img.width - 1) as f64;
             let v = (img.height - line) as f64 / (img.height - 1) as f64;
             let dir = lower_left_corner + u * &horizontal + v * &vertical - camera.position;
-            let ray = ray::Ray::new(&camera.position, &dir);
+            let ray = Ray::new(&camera.position, &dir);
             *px = ray_color(&ray);
         }
     }
