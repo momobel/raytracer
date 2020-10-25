@@ -153,7 +153,7 @@ fn ray_color(ray: &Ray, world: &HittableVec<Sphere>, depth: i16) -> Color {
     if depth < 0 {
         return image::colors::BLACK;
     }
-    if let Some(hit) = world.hit_by(ray, 0.0, ray::T_INFINITY) {
+    if let Some(hit) = world.hit_by(ray, 0.001, ray::T_INFINITY) {
         let target = hit.point + hit.normal + random_vec_in_unit_sphere();
         return 0.5 * ray_color(&Ray::new(hit.point, target - hit.point), world, depth - 1);
     }
