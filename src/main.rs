@@ -62,7 +62,10 @@ fn main() {
     let origin = Point::new(0.0, 0.0, 0.0);
     let camera = Camera::new(origin, viewport, focal_length);
     // world
-    let world = HittableVec::new(vec![Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)]);
+    let world = HittableVec::new(vec![
+        Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5),
+        Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0),
+    ]);
     // render
     fill_image(&mut img, &camera, &world);
     let file =
