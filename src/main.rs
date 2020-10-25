@@ -138,13 +138,25 @@ fn random_unit_vector() -> Vector {
     Vector::new(r * teta.cos(), r * teta.sin(), z)
 }
 
+fn random_in_hemisphere(normal: &Vector) -> Vector {
+    let random_unit = random_unit_vector();
+    if vec::dot(&random_unit, normal) > 0.0 {
+        random_unit
+    } else {
+        -random_unit
+    }
+}
+
 fn ray_color(ray: &Ray, world: &HittableVec<Sphere>, depth: i16) -> Color {
     // ray bounced too many times, no more light is gathered
     if depth < 0 {
         return image::colors::BLACK;
     }
     if let Some(hit) = world.hit_by(ray, 0.001, ray::T_INFINITY) {
+        // lambertian diffuse
         let target = hit.point + hit.normal + random_unit_vector();
+        // uniform scatter
+        //let target = hit.point + random_in_hemisphere(&hit.normal);
         return 0.5 * ray_color(&Ray::new(hit.point, target - hit.point), world, depth - 1);
     }
     let unit_dir = vec::unit(&ray.direction);
