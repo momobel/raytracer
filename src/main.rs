@@ -114,12 +114,15 @@ fn fill_image(img: &mut image::Image, camera: &Camera, world: &HittableVec<Spher
             let mut color = image::colors::BLACK;
             for _ in 0..samples {
                 let u = (col as f64 + range_rand.sample(&mut rng)) / (img.width as f64 - 1.0);
+                // render starts on top left
                 let v = (img.height as f64 - (line as f64 + range_rand.sample(&mut rng)))
                     / (img.height as f64 - 1.0);
                 let ray = camera.ray(u, v);
                 color = color + ray_color(&ray, world);
             }
-            *px = &color / samples as f64;
+            color = &color / samples as f64;
+            color.clamp(0.0, 0.999);
+            *px = color;
         }
     }
 }

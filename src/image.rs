@@ -7,9 +7,25 @@ pub struct Color {
     pub blue: f64,
 }
 
+fn clamp(val: f64, min: f64, max: f64) -> f64 {
+    if val < min {
+        min
+    } else if val > max {
+        max
+    } else {
+        val
+    }
+}
+
 impl Color {
     pub fn new(red: f64, green: f64, blue: f64) -> Self {
         Self { red, green, blue }
+    }
+
+    pub fn clamp(&mut self, min: f64, max: f64) {
+        self.red = clamp(self.red, min, max);
+        self.green = clamp(self.green, min, max);
+        self.blue = clamp(self.blue, min, max);
     }
 }
 

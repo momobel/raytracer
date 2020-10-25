@@ -6,7 +6,7 @@ pub struct PPMWriter<W: io::Write> {
 }
 
 fn numerize(f: f64) -> u8 {
-    (f * 255.0) as u8
+    (f * 256.0) as u8
 }
 
 impl<W: io::Write> PPMWriter<W> {
