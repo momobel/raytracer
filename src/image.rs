@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, Div, Mul};
 
 #[derive(Debug)]
 pub struct Color {
@@ -13,13 +13,23 @@ impl Color {
     }
 }
 
+pub mod colors {
+    use super::*;
+    pub const BLACK: Color = Color {
+        red: 0.0,
+        green: 0.0,
+        blue: 0.0,
+    };
+    pub const WHITE: Color = Color {
+        red: 1.0,
+        green: 1.0,
+        blue: 1.0,
+    };
+}
+
 impl std::default::Default for Color {
     fn default() -> Self {
-        Color {
-            red: 0.0,
-            green: 0.0,
-            blue: 0.0,
-        }
+        colors::BLACK
     }
 }
 
@@ -60,6 +70,14 @@ impl Mul<Color> for f64 {
 
     fn mul(self, color: Color) -> Color {
         self * &color
+    }
+}
+
+impl Div<f64> for &Color {
+    type Output = Color;
+
+    fn div(self, val: f64) -> Color {
+        (1.0 / val) * self
     }
 }
 

@@ -1,4 +1,6 @@
+use rand::{self, distributions::Distribution};
 use std::fs;
+use std::io::{self, Write};
 use structopt::StructOpt;
 mod image;
 mod ppm;
@@ -101,13 +103,23 @@ fn ray_color(ray: &Ray, world: &HittableVec<Sphere>) -> Color {
 }
 
 fn fill_image(img: &mut image::Image, camera: &Camera, world: &HittableVec<Sphere>) {
+    let range_rand = rand::distributions::Uniform::new(0.0, 1.0);
+    let mut rng = rand::thread_rng();
+    let samples: u8 = 100;
     for line in 0..img.height {
+        eprint!("\rLines remaining: {:3}", img.height - line);
+        io::stderr().flush().unwrap();
         for col in 0..img.width {
             let px = &mut img.data[line * img.width + col];
-            let u = col as f64 / (img.width - 1) as f64;
-            let v = (img.height - line) as f64 / (img.height - 1) as f64;
-            let ray = camera.ray(u, v);
-            *px = ray_color(&ray, world);
+            let mut color = image::colors::BLACK;
+            for _ in 0..samples {
+                let u = (col as f64 + range_rand.sample(&mut rng)) / (img.width as f64 - 1.0);
+                let v = (img.height as f64 - (line as f64 + range_rand.sample(&mut rng)))
+                    / (img.height as f64 - 1.0);
+                let ray = camera.ray(u, v);
+                color = color + ray_color(&ray, world);
+            }
+            *px = &color / samples as f64;
         }
     }
 }
