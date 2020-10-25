@@ -7,6 +7,12 @@ pub struct Sphere {
     pub radius: f64,
 }
 
+impl Sphere {
+    pub fn new(center: Point, radius: f64) -> Self {
+        Sphere { center, radius }
+    }
+}
+
 impl Hittable for Sphere {
     fn hit_by(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // let S be a sphere of center C and radius r

@@ -42,3 +42,27 @@ impl HitRecord {
 pub trait Hittable {
     fn hit_by(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
+
+pub struct HittableVec<T: Hittable> {
+    vec: Vec<T>,
+}
+
+impl<T: Hittable> HittableVec<T> {
+    pub fn new(vec: Vec<T>) -> Self {
+        Self { vec }
+    }
+
+    pub fn hit_by(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut closest = t_max;
+        let mut hit: Option<HitRecord> = None;
+        for item in &self.vec {
+            if let Some(h) = item.hit_by(ray, t_min, closest) {
+                closest = h.t;
+                hit = Some(h);
+            }
+        }
+        hit
+    }
+}
+
+pub const T_INFINITY: f64 = f64::MAX;

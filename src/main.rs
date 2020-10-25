@@ -6,7 +6,7 @@ mod ray;
 mod sphere;
 mod vec;
 use image::Color;
-use ray::{Hittable, Ray};
+use ray::{HittableVec, Ray};
 use sphere::Sphere;
 use vec::{Point, Vector};
 
@@ -61,25 +61,18 @@ fn main() {
     let focal_length = 1.0;
     let origin = Point::new(0.0, 0.0, 0.0);
     let camera = Camera::new(origin, viewport, focal_length);
+    // world
+    let world = HittableVec::new(vec![Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)]);
     // render
-    fill_image(&mut img, &camera);
+    fill_image(&mut img, &camera, &world);
     let file =
         fs::File::create(&opt.output).expect(format!("Failed to open {}", opt.output).as_str());
     let mut writer: ppm::PPMWriter<fs::File> = ppm::PPMWriter::new(file);
     writer.write(&img).expect("Failed to write image");
 }
 
-const SCENE_SPHERE: Sphere = Sphere {
-    center: Point {
-        x: 0.0,
-        y: 0.0,
-        z: -1.0,
-    },
-    radius: 0.5,
-};
-
-fn ray_color(ray: &Ray) -> Color {
-    if let Some(hit) = SCENE_SPHERE.hit_by(ray, 0.0, 50.0) {
+fn ray_color(ray: &Ray, world: &HittableVec<Sphere>) -> Color {
+    if let Some(hit) = world.hit_by(ray, 0.0, ray::T_INFINITY) {
         return 0.5 * Color::new(hit.normal.x + 1.0, hit.normal.y + 1.0, hit.normal.z + 1.0);
     }
     let unit_dir = vec::unit(&ray.direction);
@@ -87,7 +80,7 @@ fn ray_color(ray: &Ray) -> Color {
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
-fn fill_image(img: &mut image::Image, camera: &Camera) {
+fn fill_image(img: &mut image::Image, camera: &Camera, world: &HittableVec<Sphere>) {
     let horizontal = Vector::new(camera.viewport.width, 0.0, 0.0);
     let vertical = Vector::new(0.0, camera.viewport.height, 0.0);
     let lower_left_corner =
@@ -100,7 +93,7 @@ fn fill_image(img: &mut image::Image, camera: &Camera) {
             let v = (img.height - line) as f64 / (img.height - 1) as f64;
             let dir = lower_left_corner + u * &horizontal + v * &vertical - camera.position;
             let ray = Ray::new(&camera.position, &dir);
-            *px = ray_color(&ray);
+            *px = ray_color(&ray, world);
         }
     }
 }
