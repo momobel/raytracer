@@ -1,4 +1,4 @@
-use rand::{self, distributions::Distribution};
+use rand::{self, distributions::Distribution, Rng};
 use std::fs;
 use std::io::{self, Write};
 use structopt::StructOpt;
@@ -116,8 +116,8 @@ fn main() {
     // world
     let material_ground = material::Lambertian::new(Color::new(0.8, 0.8, 0.0));
     let material_center = material::Lambertian::new(Color::new(0.7, 0.3, 0.3));
-    let material_left = material::Metal::new(Color::new(0.8, 0.8, 0.8));
-    let material_right = material::Metal::new(Color::new(0.8, 0.6, 0.2));
+    let material_left = material::Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
+    let material_right = material::Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
     let world = HittableVec::new(vec![
         Sphere::new(
             Point::new(0.0, -100.5, -1.0),
