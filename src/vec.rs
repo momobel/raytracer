@@ -1,3 +1,4 @@
+use rand::{self, Rng};
 use std::cmp::PartialEq;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -146,6 +147,21 @@ pub fn cross(a: &Vector, b: &Vector) -> Vector {
 
 pub fn unit(v: &Vector) -> Vector {
     v / v.length()
+}
+
+pub fn random_unit_vector() -> Vector {
+    // by fixing one coordinate and an angle
+    let teta: f64 = rand::thread_rng().gen_range(0.0, 2.0 * std::f64::consts::PI);
+    let z: f64 = rand::thread_rng().gen_range(-1.0, 1.0);
+    // a unit vector has equation x² + y² + z² = 1
+    // thus x² + y² = 1 - z², given x² + y² = Rxy²
+    // with Rxy the radius of circle at "height" z
+    let r: f64 = (1.0 - z * z).sqrt();
+    Vector::new(r * teta.cos(), r * teta.sin(), z)
+}
+
+pub fn reflect(v: &Vector, normal: &Vector) -> Vector {
+    v - 2.0 * dot(v, normal) * normal
 }
 
 pub type Point = Vector;

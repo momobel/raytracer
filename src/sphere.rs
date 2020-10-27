@@ -1,3 +1,4 @@
+use crate::material::Material;
 use crate::ray::{HitRecord, Hittable, Ray};
 use crate::vec::{self, Point};
 
@@ -5,11 +6,16 @@ use crate::vec::{self, Point};
 pub struct Sphere {
     pub center: Point,
     pub radius: f64,
+    pub material: Box<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f64) -> Self {
-        Sphere { center, radius }
+    pub fn new(center: Point, radius: f64, material: Box<dyn Material>) -> Self {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -58,7 +64,13 @@ impl Hittable for Sphere {
             // ray direction and normal point the same way if dot product is positive
             let normal_ray_dot = vec::dot(&normal, &ray.direction);
             let front = if normal_ray_dot < 0.0 { true } else { false };
-            Some(HitRecord::new(intersect, vec::unit(&normal), t, front))
+            Some(HitRecord::new(
+                intersect,
+                vec::unit(&normal),
+                t,
+                front,
+                &self.material,
+            ))
         }
     }
 }

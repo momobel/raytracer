@@ -1,3 +1,4 @@
+use crate::material::Material;
 use crate::vec::{Point, Vector};
 
 #[derive(Debug)]
@@ -17,21 +18,27 @@ impl Ray {
 }
 
 #[derive(Debug)]
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub point: Point,
     pub normal: Vector,
     pub t: f64,
-    pub front_face: bool,
+    pub material: &'a Box<dyn Material>,
 }
 
-impl HitRecord {
-    pub fn new(point: Point, normal: Vector, t: f64, front_face: bool) -> Self {
+impl<'a> HitRecord<'a> {
+    pub fn new(
+        point: Point,
+        normal: Vector,
+        t: f64,
+        front_face: bool,
+        material: &'a Box<dyn Material>,
+    ) -> Self {
         let normal = if front_face { normal } else { -normal };
         Self {
             point,
             normal,
             t,
-            front_face,
+            material,
         }
     }
 }

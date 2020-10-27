@@ -1,8 +1,9 @@
-use rand::{self, distributions::Distribution, Rng};
+use rand::{self, distributions::Distribution};
 use std::fs;
 use std::io::{self, Write};
 use structopt::StructOpt;
 mod image;
+mod material;
 mod ppm;
 mod ray;
 mod sphere;
@@ -113,9 +114,19 @@ fn main() {
     let origin = Point::new(0.0, 0.0, 0.0);
     let camera = Camera::new(origin, viewport, focal_length);
     // world
+    let material_ground = material::Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_center = material::Lambertian::new(Color::new(0.7, 0.3, 0.3));
+    let material_left = material::Metal::new(Color::new(0.8, 0.8, 0.8));
+    let material_right = material::Metal::new(Color::new(0.8, 0.6, 0.2));
     let world = HittableVec::new(vec![
-        Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5),
-        Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0),
+        Sphere::new(
+            Point::new(0.0, -100.5, -1.0),
+            100.0,
+            Box::new(material_ground),
+        ),
+        Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center)),
+        Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left)),
+        Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, Box::new(material_right)),
     ]);
     // render
     let mut settings = RenderSettings::default();
@@ -127,19 +138,8 @@ fn main() {
     writer.write(&img).expect("Failed to write image");
 }
 
-fn random_unit_vector() -> Vector {
-    // by fixing one coordinate and an angle
-    let teta: f64 = rand::thread_rng().gen_range(0.0, 2.0 * std::f64::consts::PI);
-    let z: f64 = rand::thread_rng().gen_range(-1.0, 1.0);
-    // a unit vector has equation x² + y² + z² = 1
-    // thus x² + y² = 1 - z², given x² + y² = Rxy²
-    // with Rxy the radius of circle at "height" z
-    let r: f64 = (1.0 - z * z).sqrt();
-    Vector::new(r * teta.cos(), r * teta.sin(), z)
-}
-
 fn random_in_hemisphere(normal: &Vector) -> Vector {
-    let random_unit = random_unit_vector();
+    let random_unit = vec::random_unit_vector();
     if vec::dot(&random_unit, normal) > 0.0 {
         random_unit
     } else {
@@ -153,11 +153,11 @@ fn ray_color(ray: &Ray, world: &HittableVec<Sphere>, depth: i16) -> Color {
         return image::colors::BLACK;
     }
     if let Some(hit) = world.hit_by(ray, 0.001, ray::T_INFINITY) {
-        // lambertian diffuse
-        let target = hit.point + hit.normal + random_unit_vector();
-        // uniform scatter
-        //let target = hit.point + random_in_hemisphere(&hit.normal);
-        return 0.5 * ray_color(&Ray::new(hit.point, target - hit.point), world, depth - 1);
+        let effect = hit.material.scatter(ray, &hit);
+        match effect.scattered {
+            None => return image::colors::BLACK,
+            Some(scattered) => return effect.attenuation * ray_color(&scattered, world, depth - 1),
+        }
     }
     let unit_dir = vec::unit(&ray.direction);
     let t = 0.5 * (unit_dir.y + 1.0);
