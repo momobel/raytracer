@@ -1,6 +1,7 @@
 use crate::image::Color;
 use crate::ray::{HitRecord, Ray};
 use crate::vec::{self, Vector};
+use rand::{self, Rng};
 
 pub struct MaterialEffect {
     pub attenuation: Color,
@@ -117,11 +118,19 @@ impl Material for Dielectric {
         // n/n' sin(theta) = sin(theta')
         // sin(theta') <= 1 to refract so n/n' sin(theta) < 1
         // otherwise it reflects
-        let new_ray_dir = if refraction_ratio * sin_theta > 1.0 {
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        let rand_f64 = rand::thread_rng().gen_range(0.0, 1.0);
+        let new_ray_dir = if cannot_refract || reflectance(cos_theta, refraction_ratio) > rand_f64 {
             vec::reflect(&unit_dir, &hit.normal)
         } else {
             refract(&unit_dir, &hit.normal, refraction_ratio)
         };
         MaterialEffect::new(no_attenuation, Ray::new(hit.point, new_ray_dir))
     }
+}
+
+fn reflectance(cos: f64, refr_ratio: f64) -> f64 {
+    let mut r0 = (1.0 - refr_ratio) / (1.0 + refr_ratio);
+    r0 = r0 * r0;
+    r0 + (1.0 - r0) * (1.0 - cos).powi(5)
 }
