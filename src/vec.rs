@@ -41,15 +41,31 @@ impl Neg for Vector {
     }
 }
 
-impl Add for Vector {
-    type Output = Self;
+impl Add for &Vector {
+    type Output = Vector;
 
-    fn add(self, other: Self) -> Self {
+    fn add(self, other: Self) -> Vector {
         Vector {
             x: self.x + other.x,
             y: self.y + other.y,
             z: self.z + other.z,
         }
+    }
+}
+
+impl Add for Vector {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        &self + other
+    }
+}
+
+impl Add<Vector> for &Vector {
+    type Output = Vector;
+
+    fn add(self, other: Vector) -> Vector {
+        self + &other
     }
 }
 
@@ -106,6 +122,14 @@ impl Mul<f64> for Vector {
 
     fn mul(self, rhs: f64) -> Vector {
         &self * rhs
+    }
+}
+
+impl Mul<Vector> for f64 {
+    type Output = Vector;
+
+    fn mul(self, vec: Vector) -> Vector {
+        self * &vec
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::image::Color;
 use crate::ray::{HitRecord, Ray};
-use crate::vec;
+use crate::vec::{self, Vector};
 
 pub struct MaterialEffect {
     pub attenuation: Color,
@@ -81,5 +81,47 @@ impl Material for Metal {
         } else {
             MaterialEffect::with_attenuation(self.albedo)
         }
+    }
+}
+
+fn refract(incoming: &Vector, normal: &Vector, etai_over_etat: f64) -> Vector {
+    // cos_theta = dot(-incoming, normal)
+    let r_perp = etai_over_etat * (incoming + vec::dot(&-incoming, normal) * normal);
+    let r_par = -(1.0 - r_perp.length_squared()).abs().sqrt() * normal;
+    r_perp + r_par
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Dielectric {
+    refraction_index: f64,
+}
+
+impl Dielectric {
+    pub fn new(refraction_index: f64) -> Self {
+        Self { refraction_index }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray: &Ray, hit: &HitRecord) -> MaterialEffect {
+        let no_attenuation = Color::new(1.0, 1.0, 1.0);
+        let refraction_ratio = if hit.front_face {
+            1.0 / self.refraction_index
+        } else {
+            self.refraction_index
+        };
+        let unit_dir = vec::unit(&ray.direction);
+        // cos(theta) = -R . n
+        let cos_theta = vec::dot(&-unit_dir, &hit.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        // n/n' sin(theta) = sin(theta')
+        // sin(theta') <= 1 to refract so n/n' sin(theta) < 1
+        // otherwise it reflects
+        let new_ray_dir = if refraction_ratio * sin_theta > 1.0 {
+            vec::reflect(&unit_dir, &hit.normal)
+        } else {
+            refract(&unit_dir, &hit.normal, refraction_ratio)
+        };
+        MaterialEffect::new(no_attenuation, Ray::new(hit.point, new_ray_dir))
     }
 }

@@ -23,6 +23,7 @@ pub struct HitRecord<'a> {
     pub normal: Vector,
     pub t: f64,
     pub material: &'a Box<dyn Material>,
+    pub front_face: bool,
 }
 
 impl<'a> HitRecord<'a> {
@@ -39,6 +40,7 @@ impl<'a> HitRecord<'a> {
             normal,
             t,
             material,
+            front_face,
         }
     }
 }

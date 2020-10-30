@@ -115,9 +115,9 @@ fn main() {
     let camera = Camera::new(origin, viewport, focal_length);
     // world
     let material_ground = material::Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center = material::Lambertian::new(Color::new(0.7, 0.3, 0.3));
-    let material_left = material::Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
-    let material_right = material::Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
+    let material_center = material::Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    let material_left = material::Dielectric::new(1.5);
+    let material_right = material::Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
     let world = HittableVec::new(vec![
         Sphere::new(
             Point::new(0.0, -100.5, -1.0),
