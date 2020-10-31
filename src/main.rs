@@ -16,7 +16,7 @@ use vec::{Point, Vector};
 #[derive(StructOpt, Debug)]
 #[structopt(name = "ray")]
 struct Options {
-    #[structopt(short, long, default_value = "400")]
+    #[structopt(short, long, default_value = "1200")]
     width: u16,
     output: String,
 }
@@ -126,7 +126,7 @@ impl RenderSettings {
 }
 
 fn main() {
-    let aspect_ratio = 16.0 / 9.0;
+    let aspect_ratio = 3.0 / 2.0;
     let opt = Options::from_args();
     // image
     let mut img = image::Image::new(
@@ -136,11 +136,11 @@ fn main() {
     // camera
     let vert_fov = 20.0;
     let focal_length = 1.0;
-    let origin = Point::new(3.0, 3.0, 2.0);
-    let look_at = Point::new(0.0, 0.0, -1.0);
+    let origin = Point::new(13.0, 2.0, 3.0);
+    let look_at = Point::new(0.0, 0.0, 0.0);
     let vup = Point::new(0.0, 1.0, 0.0);
-    let aperture = 2.0;
-    let dist_to_focus = (origin - look_at).length();
+    let aperture = 0.1;
+    let dist_to_focus = 10.0;
     let camera = Camera::new(
         origin,
         look_at,
@@ -152,21 +152,54 @@ fn main() {
         dist_to_focus,
     );
     // world
-    let material_ground = material::Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center = material::Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left = material::Dielectric::new(1.5);
-    let material_right = material::Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-    let world = HittableVec::new(vec![
+    let mut spheres = vec![
         Sphere::new(
-            Point::new(0.0, -100.5, -1.0),
-            100.0,
-            Box::new(material_ground),
+            Point::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Box::new(material::Lambertian::new(Color::new(0.5, 0.5, 0.5))),
         ),
-        Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center)),
-        Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left)),
-        Sphere::new(Point::new(-1.0, 0.0, -1.0), -0.4, Box::new(material_left)),
-        Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, Box::new(material_right)),
-    ]);
+        Sphere::new(
+            Point::new(0.0, 1.0, 0.0),
+            1.0,
+            Box::new(material::Dielectric::new(1.5)),
+        ),
+        Sphere::new(
+            Point::new(-4.0, 1.0, 0.0),
+            1.0,
+            Box::new(material::Lambertian::new(Color::new(0.4, 0.2, 0.1))),
+        ),
+        Sphere::new(
+            Point::new(4.0, 1.0, 0.0),
+            1.0,
+            Box::new(material::Metal::new(Color::new(0.7, 0.6, 0.5), 0.0)),
+        ),
+    ];
+    let refp = Point::new(4.0, 0.2, 0.0);
+    for a in -11..11 {
+        for b in -11..11 {
+            let center = Point::new(
+                a as f64 + 0.9 * random_unit(),
+                0.2,
+                b as f64 + 0.9 * random_unit(),
+            );
+            if (center - refp).length() > 0.9 {
+                let rd_material = random_unit();
+                let material: Box<dyn material::Material> = if rd_material < 0.8 {
+                    let albedo = random_color() * random_color();
+                    Box::new(material::Lambertian::new(albedo))
+                } else if rd_material < 0.95 {
+                    let albedo = random_color_ranged(0.5, 1.0);
+                    let fuzz = random_range(0.0, 0.5);
+                    Box::new(material::Metal::new(albedo, fuzz))
+                } else {
+                    Box::new(material::Dielectric::new(1.5))
+                };
+                let sphere = Sphere::new(center, 0.2, material);
+                spheres.push(sphere);
+            }
+        }
+    }
+    let world = HittableVec::new(spheres);
     // render
     let mut settings = RenderSettings::default();
     settings.aa_samples(100).ray_bounce_limit(50).gamma(2);
@@ -236,4 +269,24 @@ fn fill_image(
             *px = color;
         }
     }
+}
+
+fn random_range(min: f64, max: f64) -> f64 {
+    rand::thread_rng().gen_range(min, max)
+}
+
+fn random_unit() -> f64 {
+    random_range(0.0, 1.0)
+}
+
+fn random_color() -> Color {
+    Color::new(random_unit(), random_unit(), random_unit())
+}
+
+fn random_color_ranged(min: f64, max: f64) -> Color {
+    Color::new(
+        random_range(min, max),
+        random_range(min, max),
+        random_range(min, max),
+    )
 }
