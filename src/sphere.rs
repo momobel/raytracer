@@ -36,14 +36,14 @@ impl Hittable for Sphere {
         // if negative, no real solution exist so no intersection
         // if 0, a single solution exists -b / 2a
         // if positive, 2 solutions exist (-b +- sqrt(d)) / 2a
-        let c_to_o = ray.origin - self.center;
+        let oc = ray.origin - self.center;
         let a = ray.direction.length_squared();
         // b has a factor 2 so let b = 2h
         // the quadratic equation is t = (-b +- sqrt(b² - 4ac)) / 2a
         // replacing b gives (-2h +- sqrt((2h)² - 4ac)) / 2a
         // then              (-h +- sqrt(h² - ac)) / a
-        let half_b = vec::dot(&ray.direction, &c_to_o);
-        let c = c_to_o.length_squared() - self.radius * self.radius;
+        let half_b = vec::dot(&ray.direction, &oc);
+        let c = oc.length_squared() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
         if discriminant < 0.0 {
             None
@@ -60,17 +60,11 @@ impl Hittable for Sphere {
                 }
             }
             let intersect = ray.at(t);
-            let normal = intersect - self.center;
+            let normal = (intersect - self.center) / self.radius;
             // ray direction and normal point the same way if dot product is positive
             let normal_ray_dot = vec::dot(&normal, &ray.direction);
             let front = if normal_ray_dot < 0.0 { true } else { false };
-            Some(HitRecord::new(
-                intersect,
-                vec::unit(&normal),
-                t,
-                front,
-                &self.material,
-            ))
+            Some(HitRecord::new(intersect, normal, t, front, &self.material))
         }
     }
 }

@@ -126,6 +126,7 @@ fn main() {
         ),
         Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center)),
         Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left)),
+        Sphere::new(Point::new(-1.0, 0.0, -1.0), -0.4, Box::new(material_left)),
         Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, Box::new(material_right)),
     ]);
     // render
