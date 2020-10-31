@@ -39,32 +39,41 @@ struct Camera {
     pub viewport: Viewport,
     pub focal: f64,
     lower_left_corner: Point,
-    horizontal: Vector,
-    vertical: Vector,
+    u: Vector,
+    v: Vector,
 }
 
 impl Camera {
-    pub fn new(position: Point, vert_fov: f64, aspect_ratio: f64, focal: f64) -> Self {
+    pub fn new(
+        position: Point,
+        look_at: Point,
+        vup: Vector,
+        vert_fov: f64,
+        aspect_ratio: f64,
+        focal: f64,
+    ) -> Self {
+        let w = vec::unit(&(position - look_at));
+        let u = vec::unit(&vec::cross(&vup, &w));
+        let v = vec::cross(&w, &u);
         let height = 2.0 * (vert_fov.to_radians() / 2.0).tan();
         let viewport = Viewport::new(aspect_ratio * height, height);
-        let horizontal = Vector::new(viewport.width, 0.0, 0.0);
-        let vertical = Vector::new(0.0, viewport.height, 0.0);
-        let lower_left_corner =
-            position - horizontal / 2.0 - vertical / 2.0 + Vector::new(0.0, 0.0, -focal);
+        let horizontal = viewport.width * u;
+        let vertical = viewport.height * v;
+        let lower_left_corner = position - horizontal / 2.0 - vertical / 2.0 - focal * w;
         Self {
             position,
             viewport,
             focal,
             lower_left_corner,
-            horizontal,
-            vertical,
+            u,
+            v,
         }
     }
 
-    pub fn ray(&self, u: f64, v: f64) -> Ray {
+    pub fn ray(&self, t: f64, s: f64) -> Ray {
         Ray::new(
             self.position,
-            self.lower_left_corner + u * &self.horizontal + v * &self.vertical - self.position,
+            self.lower_left_corner + t * &self.u + s * &self.v - self.position,
         )
     }
 }
@@ -112,28 +121,25 @@ fn main() {
     // camera
     let vert_fov = 90.0;
     let focal_length = 1.0;
-    let origin = Point::new(0.0, 0.0, 0.0);
-    let camera = Camera::new(origin, vert_fov, aspect_ratio, focal_length);
+    let origin = Point::new(-2.0, 2.0, 1.0);
+    let look_at = Point::new(0.0, 0.0, -1.0);
+    let vup = Point::new(0.0, 1.0, 0.0);
+    let camera = Camera::new(origin, look_at, vup, vert_fov, aspect_ratio, focal_length);
     // world
-    //let material_ground = material::Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    //let material_center = material::Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    //let material_left = material::Dielectric::new(1.5);
-    //let material_right = material::Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-    let material_left = material::Lambertian::new(Color::new(0.0, 0.0, 1.0));
-    let material_right = material::Lambertian::new(Color::new(1.0, 0.0, 0.0));
-    let r = (std::f64::consts::PI / 4.0).cos();
+    let material_ground = material::Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_center = material::Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    let material_left = material::Dielectric::new(1.5);
+    let material_right = material::Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
     let world = HittableVec::new(vec![
-        Sphere::new(Point::new(-r, 0.0, -1.0), r, Box::new(material_left)),
-        Sphere::new(Point::new(r, 0.0, -1.0), r, Box::new(material_right)),
-        //Sphere::new(
-        //    Point::new(0.0, -100.5, -1.0),
-        //    100.0,
-        //    Box::new(material_ground),
-        //),
-        //Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center)),
-        //Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left)),
-        //Sphere::new(Point::new(-1.0, 0.0, -1.0), -0.4, Box::new(material_left)),
-        //Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, Box::new(material_right)),
+        Sphere::new(
+            Point::new(0.0, -100.5, -1.0),
+            100.0,
+            Box::new(material_ground),
+        ),
+        Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center)),
+        Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left)),
+        Sphere::new(Point::new(-1.0, 0.0, -1.0), -0.4, Box::new(material_left)),
+        Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, Box::new(material_right)),
     ]);
     // render
     let mut settings = RenderSettings::default();
