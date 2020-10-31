@@ -183,6 +183,17 @@ pub fn random_unit_vector() -> Vector {
     let r: f64 = (1.0 - z * z).sqrt();
     Vector::new(r * teta.cos(), r * teta.sin(), z)
 }
+pub fn random_in_unit_disk() -> Vector {
+    let x = rand::thread_rng().gen_range(-1.0, 1.0);
+    let x_square = x * x;
+    let y = loop {
+        let guess = rand::thread_rng().gen_range(0.0, 1.0);
+        if x_square + guess * guess < 1.0 {
+            break guess;
+        }
+    };
+    Vector::new(x, y, 0.0)
+}
 
 pub fn reflect(v: &Vector, normal: &Vector) -> Vector {
     v - 2.0 * dot(v, normal) * normal

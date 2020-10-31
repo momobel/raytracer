@@ -35,12 +35,16 @@ impl Viewport {
 
 #[derive(Debug)]
 struct Camera {
-    pub position: Point,
-    pub viewport: Viewport,
-    pub focal: f64,
+    position: Point,
+    viewport: Viewport,
+    focal: f64,
     lower_left_corner: Point,
+    horizontal: Vector,
+    vertical: Vector,
     u: Vector,
     v: Vector,
+    w: Vector,
+    lens_radius: f64,
 }
 
 impl Camera {
@@ -51,29 +55,40 @@ impl Camera {
         vert_fov: f64,
         aspect_ratio: f64,
         focal: f64,
+        aperture: f64,
+        focus_dist: f64,
     ) -> Self {
         let w = vec::unit(&(position - look_at));
         let u = vec::unit(&vec::cross(&vup, &w));
         let v = vec::cross(&w, &u);
         let height = 2.0 * (vert_fov.to_radians() / 2.0).tan();
         let viewport = Viewport::new(aspect_ratio * height, height);
-        let horizontal = viewport.width * u;
-        let vertical = viewport.height * v;
-        let lower_left_corner = position - horizontal / 2.0 - vertical / 2.0 - focal * w;
+        let horizontal = focus_dist * viewport.width * u;
+        let vertical = focus_dist * viewport.height * v;
+        let lower_left_corner =
+            position - horizontal / 2.0 - vertical / 2.0 - focal * focus_dist * w;
         Self {
             position,
             viewport,
             focal,
             lower_left_corner,
+            horizontal,
+            vertical,
             u,
             v,
+            w,
+            lens_radius: aperture / 2.0,
         }
     }
 
     pub fn ray(&self, t: f64, s: f64) -> Ray {
+        let rd = self.lens_radius * vec::random_in_unit_disk();
+        let offset = rd.x * self.u + rd.y * self.v;
         Ray::new(
-            self.position,
-            self.lower_left_corner + t * &self.u + s * &self.v - self.position,
+            self.position + offset,
+            self.lower_left_corner + t * &self.horizontal + s * &self.vertical
+                - self.position
+                - offset,
         )
     }
 }
@@ -119,12 +134,23 @@ fn main() {
         (opt.width as f64 / aspect_ratio) as usize,
     );
     // camera
-    let vert_fov = 90.0;
+    let vert_fov = 20.0;
     let focal_length = 1.0;
-    let origin = Point::new(-2.0, 2.0, 1.0);
+    let origin = Point::new(3.0, 3.0, 2.0);
     let look_at = Point::new(0.0, 0.0, -1.0);
     let vup = Point::new(0.0, 1.0, 0.0);
-    let camera = Camera::new(origin, look_at, vup, vert_fov, aspect_ratio, focal_length);
+    let aperture = 2.0;
+    let dist_to_focus = (origin - look_at).length();
+    let camera = Camera::new(
+        origin,
+        look_at,
+        vup,
+        vert_fov,
+        aspect_ratio,
+        focal_length,
+        aperture,
+        dist_to_focus,
+    );
     // world
     let material_ground = material::Lambertian::new(Color::new(0.8, 0.8, 0.0));
     let material_center = material::Lambertian::new(Color::new(0.1, 0.2, 0.5));
